@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Düğün Daveti — Begüm & Tardu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fff8fb;
+    --gold: #e8604a;
+    --gold-light: #f5a990;
+    --dark: #1a0a2e;
+    --rose: #d4006a;
+    --rose-light: #ffd6e8;
+    --ink: #2d0a20;
+    --parchment: #fff0f7;
+    --violet: #8b1fa8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ─── ENVELOPE SCENE ─── */
+  #envelope-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #fce4f0 0%, #fff0f8 50%, #f0e4fc 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  #envelope-scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 85%, rgba(212,0,106,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 85% 15%, rgba(139,31,168,0.1) 0%, transparent 50%);
+  }
+
+  #envelope-scene.away {
+    opacity: 0;
+    transform: translateY(-100vh);
+    pointer-events: none;
+  }
+
+  /* Envelope wrapper */
+  .envelope-wrap {
+    position: relative;
+    width: 380px;
+    height: 256px;
+    cursor: pointer;
+    filter: drop-shadow(0 24px 60px rgba(44,32,23,0.22));
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  .envelope-wrap:hover:not(.open) {
+    transform: scale(1.025) translateY(-4px);
+    filter: drop-shadow(0 32px 80px rgba(44,32,23,0.28));
+  }
+
+  /* Envelope body */
+  .env-body {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #fce0ee 0%, #f5c8de 100%);
+    border-radius: 3px;
+    border: 1px solid rgba(212,0,106,0.25);
+  }
+
+  /* Side triangles */
+  .env-left {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 50%;
+    background: linear-gradient(to right, #f0b8d0, #e8a8c5);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  .env-right {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 50%;
+    background: linear-gradient(to left, #e8a8c5, #f0b8d0);
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+
+  /* Bottom triangle */
+  .env-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 138px;
+    background: linear-gradient(180deg, #e898c0 0%, #d878aa 100%);
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+  }
+
+  /* Letter inside */
+  .letter-peek {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 310px;
+    height: 210px;
+    background: linear-gradient(160deg, #fffdf9 0%, #faf5ee 100%);
+    border-radius: 2px;
+    border: 1px solid rgba(212,0,106,0.2);
+    z-index: 4;
+    transition: transform 1s cubic-bezier(0.34,1.4,0.64,1), opacity 0.8s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .letter-peek-inner {
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.5s ease 0.6s, transform 0.5s ease 0.6s;
+    padding: 1rem;
+  }
+
+  .letter-peek-inner .mini-names {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--dark);
+    font-weight: 300;
+  }
+
+  .letter-peek-inner .mini-names span {
+    font-style: italic;
+    color: var(--rose);
+  }
+
+  .letter-peek-inner .mini-date {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--rose);
+    margin-top: 0.4rem;
+    font-weight: 300;
+  }
+
+  .letter-peek-inner .mini-ornament {
+    color: var(--rose-light);
+    margin: 0.3rem 0;
+  }
+
+  .envelope-wrap.open .letter-peek {
+    transform: translateX(-50%) translateY(-200px);
+  }
+
+  .envelope-wrap.open .letter-peek-inner {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Flap */
+  .env-flap {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 138px;
+    z-index: 8;
+    transform-style: preserve-3d;
+    transform-origin: top center;
+    transition: transform 0.9s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .env-flap-face {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #fad8ec 0%, #f0c0da 100%);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    border-bottom: 1px solid rgba(212,0,106,0.25);
+    backface-visibility: hidden;
+  }
+
+  .envelope-wrap.open .env-flap {
+    transform: perspective(800px) rotateX(-180deg);
+  }
+
+  /* Wax seal */
+  .wax-seal {
+    position: absolute;
+    top: calc(50% - 30px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .envelope-wrap.open .wax-seal {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4);
+    pointer-events: none;
+  }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: var(--rose);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  .scroll-arrow {
+    display: block;
+    margin: 0.5rem auto 0;
+    animation: arrowBounce 1.8s ease-in-out infinite;
+  }
+
+  @keyframes arrowBounce {
+    0%,100%{transform:translateY(0);opacity:0.5}
+    50%{transform:translateY(7px);opacity:1}
+  }
+
+  .open-cta {
+    margin-top: 2rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--rose);
+    font-size: 1.05rem;
+    opacity: 0.85;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── INVITATION PAGE ─── */
+  #spacer { height: 100vh; }
+
+  #invitation {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s ease 0.2s, transform 1s ease 0.2s;
+    position: relative;
+    z-index: 1;
+  }
+
+  #invitation.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Petals */
+  .petal {
+    position: fixed;
+    top: -40px;
+    font-size: 1rem;
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+    animation: petalFall linear infinite;
+  }
+
+  @keyframes petalFall {
+    0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(1); }
+    8% { opacity: 0.5; }
+    88% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(110vh) rotate(540deg) scale(0.5); }
+  }
+
+  /* Card */
+  .invite-card {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 5rem 2.5rem 7rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up { animation: fadeUp 0.9s ease both; }
+
+  .ornament {
+    font-size: 1.1rem;
+    letter-spacing: 0.6em;
+    color: var(--rose-light);
+    margin-bottom: 1.8rem;
+  }
+
+  .intro-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.64rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 1.8rem;
+    line-height: 2;
+  }
+
+  .names-block {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.8rem, 9vw, 6rem);
+    font-weight: 300;
+    color: var(--dark);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+
+  .names-block .amp {
+    font-style: italic;
+    color: var(--rose);
+    font-size: 0.85em;
+    display: block;
+    margin: 0.1em 0;
+  }
+
+  .hr-gold {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2.5rem auto;
+  }
+
+  .hr-line {
+    flex: 1;
+    max-width: 100px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--rose));
+  }
+
+  .hr-line.r { background: linear-gradient(to left, transparent, var(--rose)); }
+
+  .hr-gem {
+    width: 7px; height: 7px;
+    background: var(--rose);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  .date-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 400;
+    color: var(--dark);
+    letter-spacing: 0.05em;
+  }
+
+  .time-sub {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-top: 0.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .body-italic {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 2;
+    color: #5a1840;
+    max-width: 500px;
+    margin: 0 auto 3.5rem;
+  }
+
+  /* Venue */
+  .venue-card {
+    background: linear-gradient(145deg, #fff5fa, #fff0f7);
+    border: 1px solid var(--rose-light);
+    padding: 2.8rem 2.5rem;
+    margin: 2rem 0;
+    position: relative;
+    text-align: center;
+  }
+
+  .venue-card::before { content: '✦'; position: absolute; top: 1rem; left: 1.2rem; color: #f0a0c0; }
+  .venue-card::after  { content: '✦'; position: absolute; bottom: 1rem; right: 1.2rem; color: #f0a0c0; }
+
+  .venue-tag {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.62rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 1rem;
+  }
+
+  .venue-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--dark);
+    margin-bottom: 0.7rem;
+  }
+
+  .venue-addr {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: #7a2050;
+    line-height: 2;
+  }
+
+  /* Map */
+  .map-wrap {
+    margin: 2rem 0;
+    position: relative;
+    border: 1px solid var(--rose-light);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(212,0,106,0.08);
+  }
+
+  .map-wrap iframe {
+    display: block;
+    width: 100%;
+    height: 300px;
+    border: none;
+    filter: sepia(25%) saturate(85%) brightness(1.02);
+  }
+
+  .map-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 40px rgba(201,169,110,0.08);
+  }
+
+  .btn-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.3rem;
+    padding: 0.85rem 2.2rem;
+    border: 1px solid var(--rose);
+    color: var(--rose);
+    background: transparent;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 0.66rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .btn-gold:hover {
+    background: var(--rose);
+    color: #fff;
+    box-shadow: 0 6px 24px rgba(212,0,106,0.3);
+  }
+
+  /* Countdown */
+  .countdown-wrap {
+    margin: 4rem 0 2rem;
+  }
+
+  .cd-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.62rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 2.5rem;
+  }
+
+  .cd-grid {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  .cd-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.5rem;
+    position: relative;
+  }
+
+  .cd-item:not(:last-child)::after {
+    content: ':';
+    position: absolute;
+    right: -6px;
+    top: 0.2rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    color: var(--rose-light);
+    font-weight: 300;
+  }
+
+  .cd-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 7vw, 4.5rem);
+    font-weight: 300;
+    color: var(--dark);
+    line-height: 1;
+    min-width: 2.5ch;
+    text-align: center;
+    transition: transform 0.15s ease;
+  }
+
+  .cd-num.tick { transform: scale(1.1); color: var(--rose); }
+
+  .cd-unit {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-top: 0.6rem;
+  }
+
+  /* RSVP */
+  .rsvp-section {
+    margin: 3.5rem 0;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--rose-light);
+    border-bottom: 1px solid var(--rose-light);
+  }
+
+  .rsvp-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: #6a1845;
+    line-height: 1.9;
+    margin-bottom: 2rem;
+  }
+
+  .btn-filled {
+    display: inline-block;
+    padding: 1.1rem 3.5rem;
+    background: linear-gradient(135deg, var(--rose) 0%, #a0006a 100%);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 0.68rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 28px rgba(212,0,106,0.4);
+    transition: all 0.3s ease;
+  }
+
+  .btn-filled:hover {
+    background: linear-gradient(135deg, #a0006a 0%, var(--dark) 100%);
+    box-shadow: 0 10px 40px rgba(212,0,106,0.35);
+    transform: translateY(-3px);
+  }
+
+  /* Footer */
+  .invite-footer {
+    padding: 2rem 0 3rem;
+  }
+
+  .footer-sig {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    color: var(--rose);
+    margin-bottom: 0.6rem;
+    font-weight: 300;
+  }
+
+  .footer-tag {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 200;
+    font-size: 0.58rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: #c888a8;
+  }
+
+  @media (max-width: 500px) {
+    .envelope-wrap { width: 310px; height: 208px; }
+    .letter-peek { width: 255px; height: 170px; }
+    .env-bottom, .env-flap { height: 112px; }
+    .cd-item { padding: 0 0.8rem; }
+    .cd-num { font-size: 2.4rem; }
+  }
+
+  /* ─── MUSIC BUTTON ─── */
+  #music-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 999;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose), #a0006a);
+    color: white;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(212,0,106,0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+  }
+
+  #music-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 28px rgba(212,0,106,0.55);
+  }
+
+  #music-btn.playing {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 4px 20px rgba(212,0,106,0.4); }
+    50% { box-shadow: 0 4px 32px rgba(212,0,106,0.75), 0 0 0 8px rgba(212,0,106,0.12); }
+  }
+
+  #yt-container { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ─── ENVELOPE SCENE ─── -->
+<div id="envelope-scene">
+  <div class="envelope-wrap" id="envelope" title="Zarfı açmak için tıklayın">
+    <div class="env-body"></div>
+    <div class="env-left"></div>
+    <div class="env-right"></div>
+    <div class="env-bottom"></div>
+
+    <!-- Letter peeking out -->
+    <div class="letter-peek">
+      <div class="letter-peek-inner">
+        <div class="mini-ornament">✦</div>
+        <div class="mini-names">Begüm <span>&amp;</span> Tardu</div>
+        <div class="mini-ornament">· · ·</div>
+        <div class="mini-date">24 Mayıs 2025</div>
+      </div>
+    </div>
+
+    <!-- Flap -->
+    <div class="env-flap">
+      <div class="env-flap-face"></div>
+    </div>
+
+    <!-- Wax Seal -->
+    <div class="wax-seal">
+      <svg width="68" height="68" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="sg" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#e8604a"/>
+            <stop offset="100%" stop-color="#c0203a"/>
+          </radialGradient>
+        </defs>
+        <circle cx="40" cy="40" r="37" fill="url(#sg)"/>
+        <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,220,230,0.5)" stroke-width="1.5"/>
+        <circle cx="40" cy="40" r="23" fill="none" stroke="rgba(255,220,230,0.3)" stroke-width="0.8"/>
+        <!-- B -->
+        <text x="29" y="45" font-family="Cormorant Garamond, serif" font-size="11" fill="#fff0f5" font-style="italic" font-weight="300">B</text>
+        <!-- & -->
+        <text x="37.5" y="44" font-family="Cormorant Garamond, serif" font-size="8" fill="rgba(255,230,240,0.7)">&amp;</text>
+        <!-- T -->
+        <text x="45" y="45" font-family="Cormorant Garamond, serif" font-size="11" fill="#fff0f5" font-style="italic" font-weight="300">T</text>
+        <circle cx="40" cy="28" r="1.5" fill="rgba(255,220,235,0.6)"/>
+        <circle cx="40" cy="53" r="1.5" fill="rgba(255,220,235,0.6)"/>
+        <circle cx="25" cy="40" r="1.5" fill="rgba(255,220,235,0.6)"/>
+        <circle cx="55" cy="40" r="1.5" fill="rgba(255,220,235,0.6)"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="open-cta">Zarfı açmak için tıklayın veya kaydırın</div>
+
+  <div class="scroll-hint">
+    Scroll
+    <svg class="scroll-arrow" width="16" height="18" viewBox="0 0 16 18">
+      <path d="M8 0 L8 12 M3 8 L8 13 L13 8" stroke="#d4006a" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Music Player -->
+<div id="music-btn" title="Müziği Başlat">
+  <span id="music-icon">♪</span>
+</div>
+<audio id="bg-audio" loop preload="auto"></audio>
+
+<!-- Scroll spacer -->
+<div id="spacer"></div>
+
+<!-- Petal container -->
+<div id="petals" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;"></div>
+
+<!-- ─── INVITATION ─── -->
+<div id="invitation">
+  <div class="invite-card">
+
+    <div class="ornament fade-up" style="animation-delay:0.1s">✦ ✦ ✦</div>
+
+    <div class="intro-label fade-up" style="animation-delay:0.2s">
+      Sizi en mutlu günümüzde aramızda görmekten<br>onur duyarız
+    </div>
+
+    <div class="names-block fade-up" style="animation-delay:0.35s">
+      Begüm
+      <span class="amp">&amp;</span>
+      Tardu
+    </div>
+
+    <div class="hr-gold fade-up" style="animation-delay:0.5s">
+      <div class="hr-line"></div>
+      <div class="hr-gem"></div>
+      <div class="hr-line r"></div>
+    </div>
+
+    <div class="date-big fade-up" style="animation-delay:0.6s">24 Mayıs 2025, Cumartesi</div>
+    <div class="time-sub fade-up" style="animation-delay:0.7s">Saat 17:00 — Nikah Töreni &nbsp;·&nbsp; 19:00 — Ziyafet</div>
+
+    <p class="body-italic fade-up" style="animation-delay:0.85s">
+      Hayatımızın en anlamlı anında, sevdiklerimizin huzurunda
+      birbirimize söz verip aşkımızı taçlandıracağımız bu özel günde
+      sizi de aramızda görmek en büyük dileğimizdir.
+    </p>
+
+    <!-- Venue -->
+    <div class="venue-card fade-up" style="animation-delay:1s">
+      <div class="venue-tag">Tören &amp; Ziyafet Mekanı</div>
+      <div class="venue-name">Çırağan Sarayı Kempinski</div>
+      <div class="venue-addr">
+        Çırağan Caddesi No:32<br>
+        34349 Beşiktaş — İstanbul
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-wrap fade-up" style="animation-delay:1.1s">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3009.2!2d29.0175!3d41.045!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cab7b04cd6a36d%3A0x2df1da1bd4cd5d0a!2sC%CC%A7ırag%CC%86an%20Palace%20Kempinski%20Istanbul!5e0!3m2!1str!2str!4v1700000000000"
+        allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+      <div class="map-glow"></div>
+    </div>
+    <a href="https://maps.google.com/?q=Ciragan+Palace+Kempinski+Istanbul" target="_blank" class="btn-gold fade-up" style="animation-delay:1.15s">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/>
+      </svg>
+      Yol Tarifi Al
+    </a>
+
+    <div class="hr-gold fade-up" style="animation-delay:1.2s;margin-top:3.5rem">
+      <div class="hr-line"></div>
+      <div class="hr-gem"></div>
+      <div class="hr-line r"></div>
+    </div>
+
+    <!-- Countdown -->
+    <div class="countdown-wrap fade-up" style="animation-delay:1.3s">
+      <div class="cd-label">Büyük Güne Kalan Süre</div>
+      <div class="cd-grid">
+        <div class="cd-item"><div class="cd-num" id="cd-d">--</div><div class="cd-unit">Gün</div></div>
+        <div class="cd-item"><div class="cd-num" id="cd-h">--</div><div class="cd-unit">Saat</div></div>
+        <div class="cd-item"><div class="cd-num" id="cd-m">--</div><div class="cd-unit">Dakika</div></div>
+        <div class="cd-item"><div class="cd-num" id="cd-s">--</div><div class="cd-unit">Saniye</div></div>
+      </div>
+    </div>
+
+    <!-- RSVP -->
+    <div class="rsvp-section fade-up" style="animation-delay:1.4s">
+      <p class="rsvp-text">
+        Teşrefinizi sabırsızlıkla bekliyoruz. 🌸
+      </p>
+      <a href="tel:+905001234567" class="btn-filled">Katılacağım</a>
+    </div>
+
+    <!-- Footer -->
+    <div class="invite-footer fade-up" style="animation-delay:1.5s">
+      <div class="footer-sig">Begüm &amp; Tardu</div>
+      <div class="footer-tag">Birlikte — sonsuza kadar — 24.05.2025</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ─── PETALS ─── */
+(function() {
+  const wrap = document.getElementById('petals');
+  const symbols = ['🌸','🌺','🌼','✿','❀','🌹'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = symbols[i % symbols.length];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.fontSize = (0.65 + Math.random() * 0.9) + 'rem';
+    p.style.animationDuration = (9 + Math.random() * 11) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    wrap.appendChild(p);
+  }
+})();
+
+/* ─── ENVELOPE OPEN ─── */
+const scene   = document.getElementById('envelope-scene');
+const env     = document.getElementById('envelope');
+const inv     = document.getElementById('invitation');
+let triggered = false;
+
+function openEnvelope() {
+  if (triggered) return;
+  triggered = true;
+  env.classList.add('open');
+  setTimeout(() => {
+    scene.classList.add('away');
+    inv.classList.add('visible');
+    // Start music after user interaction (envelope click/scroll)
+    setTimeout(startMusic, 800);
+  }, 950);
+}
+
+// Click to open
+env.addEventListener('click', openEnvelope);
+
+// Scroll to open
+window.addEventListener('scroll', () => {
+  if (window.scrollY > window.innerHeight * 0.35) openEnvelope();
+}, { passive: true });
+
+/* ─── COUNTDOWN ─── */
+const TARGET = new Date('2025-05-24T17:00:00');
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function tick() {
+  const diff = TARGET - Date.now();
+  if (diff <= 0) {
+    ['cd-d','cd-h','cd-m','cd-s'].forEach(id => document.getElementById(id).textContent = '00');
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor(diff % 86400000 / 3600000);
+  const m = Math.floor(diff % 3600000 / 60000);
+  const s = Math.floor(diff % 60000 / 1000);
+
+  const sEl = document.getElementById('cd-s');
+  const prev = sEl.textContent;
+  const next = pad(s);
+
+  if (prev !== next) {
+    sEl.classList.add('tick');
+    setTimeout(() => sEl.classList.remove('tick'), 150);
+  }
+
+  document.getElementById('cd-d').textContent = pad(d);
+  document.getElementById('cd-h').textContent = pad(h);
+  document.getElementById('cd-m').textContent = pad(m);
+  sEl.textContent = next;
+}
+
+/* ─── ROMANTIC PIANO — Web Audio API ─── */
+const musicBtn  = document.getElementById('music-btn');
+const musicIcon = document.getElementById('music-icon');
+let audioCtx = null;
+let playing  = false;
+let stopFlag = false;
+let masterGain = null;
+
+// Romantic piano melody — notes in Hz, duration in beats
+// Based on a slow waltz-like romantic progression
+const BPM   = 52;
+const BEAT  = 60 / BPM;
+
+// Full melody: [frequency, beats, volume]
+const melody = [
+  // Phrase 1
+  [523.25,2,0.7],[659.25,1,0.6],[587.33,1,0.6],
+  [523.25,2,0.7],[493.88,2,0.5],
+  [440.00,2,0.7],[523.25,1,0.6],[493.88,1,0.5],
+  [440.00,4,0.65],
+  // Phrase 2
+  [392.00,2,0.6],[440.00,1,0.5],[493.88,1,0.55],
+  [523.25,2,0.7],[587.33,2,0.6],
+  [659.25,2,0.75],[698.46,1,0.6],[659.25,1,0.6],
+  [587.33,4,0.65],
+  // Phrase 3 — higher, more emotional
+  [783.99,2,0.7],[698.46,1,0.6],[659.25,1,0.6],
+  [587.33,2,0.65],[523.25,2,0.6],
+  [493.88,2,0.6],[440.00,1,0.5],[493.88,1,0.5],
+  [523.25,4,0.7],
+  // Phrase 4 — resolve
+  [659.25,2,0.65],[587.33,1,0.55],[523.25,1,0.55],
+  [493.88,2,0.6],[440.00,2,0.55],
+  [392.00,2,0.5],[349.23,2,0.5],
+  [440.00,4,0.6],
+];
+
+// Soft chord accompaniment [root Hz, beats]
+const chords = [
+  [[261.63,329.63,392.00], 4],
+  [[246.94,311.13,369.99], 4],
+  [[220.00,277.18,329.63], 4],
+  [[196.00,261.63,329.63], 4],
+  [[220.00,277.18,349.23], 4],
+  [[233.08,293.66,349.23], 4],
+  [[246.94,311.13,392.00], 4],
+  [[261.63,329.63,392.00], 4],
+];
+
+function createPianoNote(ctx, freq, startTime, duration, vol) {
+  const gain = ctx.createGain();
+  gain.connect(masterGain);
+
+  // Attack-Decay-Sustain-Release envelope
+  const attack  = 0.015;
+  const decay   = 0.12;
+  const sustain = vol * 0.55;
+  const release = duration * 0.45;
+
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(vol, startTime + attack);
+  gain.gain.linearRampToValueAtTime(sustain, startTime + attack + decay);
+  gain.gain.setValueAtTime(sustain, startTime + duration - release);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+  // Fundamental
+  const osc1 = ctx.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.value = freq;
+  osc1.connect(gain);
+  osc1.start(startTime);
+  osc1.stop(startTime + duration);
+
+  // 2nd harmonic (softer)
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.value = freq * 2;
+  const g2 = ctx.createGain();
+  g2.gain.value = 0.18;
+  osc2.connect(g2);
+  g2.connect(masterGain);
+  osc2.start(startTime);
+  osc2.stop(startTime + duration);
+
+  // 3rd harmonic (very soft)
+  const osc3 = ctx.createOscillator();
+  osc3.type = 'sine';
+  osc3.frequency.value = freq * 3;
+  const g3 = ctx.createGain();
+  g3.gain.value = 0.06;
+  osc3.connect(g3);
+  g3.connect(masterGain);
+  osc3.start(startTime);
+  osc3.stop(startTime + duration);
+}
+
+function createChordNote(ctx, freq, startTime, duration) {
+  const gain = ctx.createGain();
+  gain.connect(masterGain);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(0.055, startTime + 0.04);
+  gain.gain.linearRampToValueAtTime(0.03, startTime + 0.3);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+async function playPiano() {
+  stopFlag = false;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Reverb via convolver
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.72;
+
+  const reverb = audioCtx.createConvolver();
+  const reverbGain = audioCtx.createGain();
+  reverbGain.gain.value = 0.28;
+  const dryGain = audioCtx.createGain();
+  dryGain.gain.value = 0.8;
+
+  // Simple impulse response for reverb
+  const rate = audioCtx.sampleRate;
+  const length = rate * 2.5;
+  const impulse = audioCtx.createBuffer(2, length, rate);
+  for (let c = 0; c < 2; c++) {
+    const d = impulse.getChannelData(c);
+    for (let i = 0; i < length; i++) {
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/length, 2.8);
+    }
+  }
+  reverb.buffer = impulse;
+
+  masterGain.connect(dryGain);
+  masterGain.connect(reverb);
+  reverb.connect(reverbGain);
+  dryGain.connect(audioCtx.destination);
+  reverbGain.connect(audioCtx.destination);
+
+  const loopMelody = () => {
+    if (stopFlag) return;
+    let t = audioCtx.currentTime + 0.05;
+    const loopStart = t;
+
+    // Schedule melody
+    for (const [freq, beats, vol] of melody) {
+      if (stopFlag) break;
+      createPianoNote(audioCtx, freq, t, beats * BEAT * 0.92, vol * 0.82);
+      t += beats * BEAT;
+    }
+
+    // Schedule chords (looping)
+    let ct = loopStart;
+    const totalBeats = melody.reduce((s,[,b])=>s+b,0);
+    const totalTime  = totalBeats * BEAT;
+    let ci = 0;
+    while (ct < loopStart + totalTime) {
+      const [freqs, beats] = chords[ci % chords.length];
+      for (const f of freqs) createChordNote(audioCtx, f, ct, beats * BEAT * 0.9);
+      ct += beats * BEAT;
+      ci++;
+    }
+
+    // Loop after melody ends
+    const loopDuration = totalBeats * BEAT * 1000 + 200;
+    setTimeout(() => { if (!stopFlag) loopMelody(); }, loopDuration);
+  };
+
+  loopMelody();
+}
+
+function startMusic() {
+  if (playing) return;
+  playing = true;
+  playPiano();
+  musicIcon.textContent = '■';
+  musicBtn.classList.add('playing');
+  musicBtn.title = 'Müziği Durdur';
+}
+
+function stopMusic() {
+  stopFlag = true;
+  playing  = false;
+  if (audioCtx) {
+    // Fade out gently
+    if (masterGain) {
+      masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+    }
+    setTimeout(() => { audioCtx.close(); audioCtx = null; }, 900);
+  }
+  musicIcon.textContent = '♪';
+  musicBtn.classList.remove('playing');
+  musicBtn.title = 'Müziği Başlat';
+}
+
+musicBtn.addEventListener('click', () => {
+  playing ? stopMusic() : startMusic();
+});
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
